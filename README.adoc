@@ -226,6 +226,45 @@ html5s-image-self-link-label::
   Default is `Open the image in full size`.
 
 
+== Development
+
+The converter itself is not written directly in Ruby: it's a set of https://github.com/slim-template/slim/[Slim] templates in `data/templates/`, precompiled by https://github.com/jirutka/asciidoctor-templates-compiler/[asciidoctor-templates-compiler] into `lib/asciidoctor/html5s/converter.rb`.
+Edit the `.slim` templates (and `data/templates/helpers.rb` for shared logic), not the generated converter file.
+
+=== Setup
+
+[source, sh]
+bundle install
+
+=== Running the tests
+
+Expected output for each template is fixed by golden-file examples under `test/examples/html5/`, driven by https://github.com/jirutka/asciidoctor-doctest[asciidoctor-doctest]. `rake test` transparently rebuilds the converter from the templates before running:
+
+[source, sh]
+bundle exec rake test
+
+=== Regenerating test examples
+
+After changing a template's output on purpose, regenerate the affected golden files instead of hand-editing them:
+
+[source, sh]
+----
+# Regenerate only examples matching a pattern
+FORCE=yes PATTERN='admonition:*' bundle exec rake doctest:generate
+
+# Regenerate everything.
+FORCE=yes bundle exec rake doctest:generate
+----
+
+Without `FORCE=yes`, existing examples are left untouched and only genuinely new ones are written.
+Always run `bundle exec rake test` afterward and read the diff in `test/examples/html5/` before committing; a passing test suite only confirms the fixtures match the templates, not that either one is actually correct.
+
+=== Building the JS/npm package
+
+[source, sh]
+bundle exec rake build:js
+
+
 == License
 
 This project is licensed under http://opensource.org/licenses/MIT/[MIT License].
