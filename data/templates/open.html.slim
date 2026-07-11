@@ -1,7 +1,13 @@
 - if style == 'abstract'
   - if abstract_allowed?
-    = block_with_title :class=>'quote-block abstract'
-      blockquote =content
+    - if title?
+      - title_id = generate_title_id('abstract')
+      section.abstract id=id class=role aria-labelledby=title_id role='doc-abstract'
+        p.block-title id=title_id role='heading' =title
+        =content
+    - else
+      section.abstract id=id class=role aria-label='Abstract' role='doc-abstract'
+        =content
 - elsif style != 'partintro' || partintro_allowed?
   = block_with_title :class=>['open-block', (style if style != 'open')]
     .content =content

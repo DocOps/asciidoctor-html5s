@@ -168,8 +168,8 @@ module Slim::Helpers
   #   = block_with_title :class=>['quote-block', 'center']
   #     blockquote =content
   #
-  #   <section id="myid" class="quote-block center myrole1 myrole2">
-  #     <h6>Block Title</h6>
+  #   <section id="myid" class="quote-block center myrole1 myrole2" aria-labelledby="quote-title-1">
+  #     <p class="block-title" id="quote-title-1" role="heading">Block Title</p>
   #     <blockquote>Lorem ipsum</blockquote>
   #   </section>
   #
@@ -189,13 +189,22 @@ module Slim::Helpers
   #     <blockquote>Lorem ipsum</blockquote>
   #   </div>
   #
+  # The title, when present, is rendered as a non-heading +p.block-title+
+  # referenced via +aria-labelledby+ on the enclosing tag, instead of a
+  # fixed-level heading -- a heading tag pinned to a fixed level would clash
+  # with the document's real section hierarchy.
+  #
   # @param attrs [Hash, String] the tag's attributes as Hash),
-  #        or the tag's class if it's not a Hash.
+  #        or the tag's class if it's not a Hash. May include +:tag+ to
+  #        override the enclosing element (default: +:section+, falling back
+  #        to +:div+ when untitled; a non-+:section+ +:tag+ is kept as-is even
+  #        when untitled, e.g. sidebar's +:aside+).
   # @param title [String, nil] the title.
   # @yield The block of Slim/HTML code within the tag (optional).
   # @return [String] a rendered HTML fragment.
   #
   def block_with_title(attrs = {}, title = @title, &block)
+    tag = attrs.delete(:tag) || :section
     if (klass = attrs[:class]).is_a? String
       klass = klass.split(' ')
     end
@@ -206,12 +215,26 @@ module Slim::Helpers
       # XXX quick hack
       nested = is_a?(::Asciidoctor::List) &&
           (parent.is_a?(::Asciidoctor::ListItem) || parent.is_a?(::Asciidoctor::List))
-      html_tag_if !nested, :div, attrs, yield
+      html_tag_if !nested, (tag == :section ? :div : tag), attrs, yield
     else
-      html_tag :section, attrs do
-        [html_tag(:h6, {class: 'block-title'}, title), yield].join("\n")
+      title_id = generate_title_id
+      attrs[:'aria-labelledby'] = title_id
+      html_tag tag, attrs do
+        [html_tag(:p, {class: 'block-title', id: title_id, role: 'heading'}, title), yield].join("\n")
       end
     end
+  end
+
+  ##
+  # Generates a unique, namespaced id for a non-heading block title (see
+  # {#block_with_title}), so it can be referenced via +aria-labelledby+
+  # instead of relying on a fixed-level heading tag.
+  #
+  # @param prefix [#to_s] a namespace for the id (default: the node's context).
+  # @return [String] a unique id, e.g. "sidebar-title-1".
+  #
+  def generate_title_id(prefix = context)
+    "#{prefix}-title-#{document.counter("html5s-#{prefix}-title")}"
   end
 
   def block_with_caption(position = :bottom, attrs = {}, &block)

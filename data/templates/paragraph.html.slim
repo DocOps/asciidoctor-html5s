@@ -1,6 +1,7 @@
 - if title?
-  section.paragraph id=id
-    h6.block-title =title
+  - title_id = generate_title_id
+  section.paragraph id=id aria-labelledby=title_id
+    p.block-title id=title_id role='heading' =title
     p class=role =content
 - else
   p id=id class=role =content
