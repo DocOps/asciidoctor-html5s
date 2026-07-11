@@ -1,12 +1,16 @@
+- title_id = generate_title_id('admonition') if title?
 - capture
-  h6.block-title class=('label-only' unless title?)
-    span.title-label ="#{local_attr :textlabel}: "
-    =title
-  = html_tag_if !blocks?, :p
-    =content
+  .gutter
+    span.icon aria-hidden='true'
+    span.label =(local_attr :textlabel)
+  .content
+    - if title?
+      p.block-title id=title_id role='heading' =title
+    = html_tag_if !blocks?, :p
+      =content
 - if admonition_aside?
-  aside.admonition-block id=id class=[(attr :name), role] role=admonition_aria
+  aside.admonition-block id=id class=[(attr :name), role] role=admonition_aria aria-labelledby=title_id
     - yield_capture
 - else
-  section.admonition-block id=id class=[(attr :name), role] role=admonition_aria
+  section.admonition-block id=id class=[(attr :name), role] role=admonition_aria aria-labelledby=title_id
     - yield_capture
